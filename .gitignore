@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Data artifacts
+data/runs/*
+!data/runs/.gitkeep
+results/
+
+# Extracted/generated datasets
+output/
+
+# Background course resources (provided reference material)
+Buttazzo--Chapter 4.pdf
+RM-vs-EDF.pdf
+w2d-simulation.pdf
+Table of Contents.html
+task-sets.zip
+task-set-generator-README.md
+
+# Local audit/notes artifacts
+AUDIT.md
+IMPLEMENTATION_GUIDE.md
+AGENTS.md
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
