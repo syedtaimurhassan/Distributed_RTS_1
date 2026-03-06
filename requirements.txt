@@ -1,0 +1,2 @@
+# This project currently uses only the Python standard library.
+# The file is intentionally kept for reproducible environment setup.
