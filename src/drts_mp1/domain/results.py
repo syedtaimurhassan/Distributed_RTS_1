@@ -24,10 +24,10 @@ class DMRTARow:
 class EDFPDCSummary:
     """Single-row EDF PDC summary output."""
 
-    u_total: float
+    u_total: str | float
     h_hyperperiod: int
     d_max: int
-    l_star: int | None = None
+    l_star: str | int | None = None
     test_bound: int | None = None
     feasible: bool | None = None
 
@@ -42,12 +42,26 @@ class EDFPDCPoint:
 
 
 @dataclass
+class EDFWCRTRow:
+    """Per-task exact EDF WCRT row (synchronous periodic WCET model)."""
+
+    task_id: str
+    wcet_c: int
+    period_t: int
+    deadline_d: int
+    jobs_in_hyperperiod: int
+    edf_wcrt_ri: int | None = None
+    schedulable: bool | None = None
+
+
+@dataclass
 class AnalysisResult:
-    """Combined analysis outputs for DM RTA and EDF PDC."""
+    """Combined analysis outputs for DM RTA, EDF PDC, and EDF WCRT."""
 
     dm_rta_rows: list[DMRTARow] = field(default_factory=list)
     edf_pdc_summary: EDFPDCSummary | None = None
     edf_pdc_points: list[EDFPDCPoint] = field(default_factory=list)
+    edf_wcrt_rows: list[EDFWCRTRow] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 

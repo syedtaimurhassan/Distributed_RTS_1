@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import random
 
 from drts_mp1.domain.job import Job
 from drts_mp1.domain.results import SimJobRow, SimResult
@@ -63,6 +64,8 @@ def _process_releases(
     release_queue: EventQueue,
     task_by_id: dict[str, Task],
     next_job_index: dict[str, int],
+    execution_time_mode: str,
+    rng: random.Random,
 ) -> None:
     for event in release_queue.pop_all_at(state.now):
         task_id = event.job_id
@@ -70,12 +73,17 @@ def _process_releases(
             continue
 
         task = task_by_id[task_id]
+        execution_time = _resolve_execution_time(
+            task=task,
+            execution_time_mode=execution_time_mode,
+            rng=rng,
+        )
         job = Job(
             task_id=task.task_id,
             job_index=next_job_index[task.task_id],
             release_time=state.now,
             abs_deadline=state.now + task.deadline,
-            remaining_exec=task.wcet,
+            remaining_exec=execution_time,
         )
         next_job_index[task.task_id] += 1
         state.released_jobs.append(job)
@@ -112,9 +120,32 @@ def _to_sim_job_rows(jobs: list[Job]) -> list[SimJobRow]:
     return rows
 
 
-def run_simulation(taskset: TaskSet, policy: SchedulerPolicy, stop_time: Time) -> SimResult:
+def _resolve_execution_time(task: Task, execution_time_mode: str, rng: random.Random) -> int:
+    if execution_time_mode == "wcet":
+        return task.wcet
+    if execution_time_mode == "uniform":
+        high = max(task.bcet, task.wcet)
+        if high <= 0:
+            return 0
+        low = max(0, min(task.bcet, task.wcet))
+        if low > high:
+            low = high
+        return rng.randint(low, high)
+    raise ValueError("Unsupported execution_time_mode. Use 'wcet' or 'uniform'.")
+
+
+def run_simulation(
+    taskset: TaskSet,
+    policy: SchedulerPolicy,
+    stop_time: Time,
+    execution_time_mode: str = "wcet",
+    random_seed: int | None = None,
+    drain_after_stop: bool = True,
+) -> SimResult:
     """Run discrete-event simulation to `stop_time` using the selected policy."""
     stop = int(stop_time)
+    mode = execution_time_mode.strip().lower()
+    rng = random.Random(random_seed)
     state = SimulationState(now=0)
     task_by_id = {task.task_id: task for task in taskset.tasks}
     next_job_index: dict[str, int] = defaultdict(int)
@@ -128,7 +159,14 @@ def run_simulation(taskset: TaskSet, policy: SchedulerPolicy, stop_time: Time) -
             if next_release is None or next_release >= stop:
                 break
             state.now = next_release
-            _process_releases(state, release_queue, task_by_id, next_job_index)
+            _process_releases(
+                state,
+                release_queue,
+                task_by_id,
+                next_job_index,
+                mode,
+                rng,
+            )
             _dispatch(state, policy)
             continue
 
@@ -144,7 +182,7 @@ def run_simulation(taskset: TaskSet, policy: SchedulerPolicy, stop_time: Time) -
         if next_release_time is not None and next_release_time < next_time:
             next_time = next_release_time
 
-        if next_time > stop:
+        if next_time > stop and not drain_after_stop:
             if state.running_job is not None:
                 state.running_job.remaining_exec -= stop - state.now
             state.now = stop
@@ -160,7 +198,14 @@ def run_simulation(taskset: TaskSet, policy: SchedulerPolicy, stop_time: Time) -
             state.running_job = None
 
         if release_queue.next_time() == state.now:
-            _process_releases(state, release_queue, task_by_id, next_job_index)
+            _process_releases(
+                state,
+                release_queue,
+                task_by_id,
+                next_job_index,
+                mode,
+                rng,
+            )
 
         _dispatch(state, policy)
 

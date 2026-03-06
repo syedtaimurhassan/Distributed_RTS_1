@@ -24,6 +24,7 @@ MODULES = [
     "drts_mp1.io.paths",
     "drts_mp1.analysis.dm_rta",
     "drts_mp1.analysis.edf_pdc",
+    "drts_mp1.analysis.edf_wcrt",
     "drts_mp1.analysis.priority",
     "drts_mp1.analysis.math_utils",
     "drts_mp1.simulation.engine",

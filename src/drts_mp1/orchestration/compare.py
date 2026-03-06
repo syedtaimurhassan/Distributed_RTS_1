@@ -57,3 +57,30 @@ def compare_edf_pdc_vs_sim_edf(
             }
         ]
     )
+
+
+def compare_edf_wcrt_vs_sim_edf(
+    analysis_result: AnalysisResult,
+    sim_result: SimResult,
+) -> CompareResult:
+    """Compare EDF analytical WCRTs against EDF simulation worst response times."""
+    sim_by_task = {row.task_id: row for row in sim_result.task_rows}
+    rows: list[dict[str, object]] = []
+
+    for edf_row in analysis_result.edf_wcrt_rows:
+        sim_row = sim_by_task.get(edf_row.task_id)
+        sim_worst = sim_row.worst_response_time if sim_row is not None else None
+        difference: float | None = None
+        if edf_row.edf_wcrt_ri is not None and sim_worst is not None:
+            difference = float(edf_row.edf_wcrt_ri) - float(sim_worst)
+
+        rows.append(
+            {
+                "TaskID": edf_row.task_id,
+                "EDF_WCRT_Ri": edf_row.edf_wcrt_ri,
+                "Sim_WorstResponseTime": sim_worst,
+                "Difference": difference,
+            }
+        )
+
+    return CompareResult(rows=rows)

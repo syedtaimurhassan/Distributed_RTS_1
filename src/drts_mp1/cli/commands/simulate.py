@@ -14,6 +14,10 @@ def handle_simulate(args: argparse.Namespace) -> int:
         stop_rule=args.stop,
         out_root=args.out,
         k=args.k,
+        execution_mode=args.execution_mode,
+        core_count=args.cores,
+        sim_execution_time_mode=args.exec_time,
+        sim_random_seed=args.seed,
     )
     return 0
 
@@ -46,5 +50,29 @@ def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser
         "--out",
         default="results/runs",
         help="Output root for run folders (default: results/runs).",
+    )
+    parser.add_argument(
+        "--execution-mode",
+        default="single",
+        choices=["single", "multi"],
+        help="Execution mode: single-core or PE-partitioned multi-core (default: single).",
+    )
+    parser.add_argument(
+        "--cores",
+        type=int,
+        default=1,
+        help="Configured core count (default: 1). In multi mode, PE must map into this range.",
+    )
+    parser.add_argument(
+        "--exec-time",
+        default="wcet",
+        choices=["wcet", "uniform"],
+        help="Execution-time model: fixed WCET or uniform integer in [BCET, WCET] (default: wcet).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Optional RNG seed used when --exec-time uniform.",
     )
     parser.set_defaults(handler=handle_simulate)

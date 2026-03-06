@@ -33,6 +33,16 @@ ANALYSIS_EDF_PDC_SUMMARY_COLUMNS: tuple[str, ...] = (
 
 ANALYSIS_EDF_PDC_POINTS_COLUMNS: tuple[str, ...] = ("t", "dbf_t", "Pass")
 
+ANALYSIS_EDF_WCRT_COLUMNS: tuple[str, ...] = (
+    "TaskID",
+    "WCET_C",
+    "Period_T",
+    "Deadline_D",
+    "JobsInHyperperiod",
+    "EDF_WCRT_Ri",
+    "Schedulable",
+)
+
 SIM_JOBS_COLUMNS: tuple[str, ...] = (
     "TaskID",
     "JobIndex",
@@ -71,6 +81,13 @@ COMPARE_EDF_COLUMNS: tuple[str, ...] = (
     "EDF_PDC_Feasible",
     "Sim_DeadlineMisses_Total",
     "Agreement",
+)
+
+COMPARE_EDF_WCRT_COLUMNS: tuple[str, ...] = (
+    "TaskID",
+    "EDF_WCRT_Ri",
+    "Sim_WorstResponseTime",
+    "Difference",
 )
 
 
@@ -153,6 +170,24 @@ def write_analysis_edf_pdc_points_csv(run_dir: str | Path, result: AnalysisResul
     return _write_rows(path, ANALYSIS_EDF_PDC_POINTS_COLUMNS, rows)
 
 
+def write_analysis_edf_wcrt_csv(run_dir: str | Path, result: AnalysisResult) -> Path:
+    """Write per-task exact EDF WCRT analysis CSV."""
+    path = Path(run_dir) / "analysis_edf_wcrt.csv"
+    rows = [
+        {
+            "TaskID": row.task_id,
+            "WCET_C": row.wcet_c,
+            "Period_T": row.period_t,
+            "Deadline_D": row.deadline_d,
+            "JobsInHyperperiod": row.jobs_in_hyperperiod,
+            "EDF_WCRT_Ri": row.edf_wcrt_ri,
+            "Schedulable": row.schedulable,
+        }
+        for row in result.edf_wcrt_rows
+    ]
+    return _write_rows(path, ANALYSIS_EDF_WCRT_COLUMNS, rows)
+
+
 def write_sim_jobs_csv(run_dir: str | Path, policy: str, result: SimResult) -> Path:
     """Write per-job simulation CSV for one policy."""
     path = Path(run_dir) / f"sim_jobs_{policy}.csv"
@@ -207,3 +242,14 @@ def write_compare_csv(
     if "TaskID" in allowed:
         rows.sort(key=lambda row: str(row.get("TaskID", "")))
     return _write_rows(Path(csv_path), columns, rows)
+
+
+def write_run_log_txt(run_dir: str | Path, lines: Sequence[str]) -> Path:
+    """Write plain-text run log lines to `run_log.txt`."""
+    path = Path(run_dir) / "run_log.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = "\n".join(str(line) for line in lines)
+    if content and not content.endswith("\n"):
+        content += "\n"
+    path.write_text(content, encoding="utf-8")
+    return path

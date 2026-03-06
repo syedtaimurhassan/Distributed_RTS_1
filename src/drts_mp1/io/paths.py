@@ -8,6 +8,34 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+def create_run_group_id(execution_mode: str, core_count: int) -> str:
+    """Create group ID for one command invocation.
+
+    Format:
+    - <mode>-<cores>c-<timestamp>
+    Example:
+    - single-1c-20260306T101530123456Z
+    """
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    mode = execution_mode.strip().lower()
+    return f"{mode}-{core_count}c-{ts}"
+
+
+def create_run_group_folder(
+    out_root: str | Path,
+    execution_mode: str,
+    core_count: int,
+) -> Path:
+    """Create a per-invocation run-group directory and return its path."""
+    root = Path(out_root)
+    group_dir = root / create_run_group_id(
+        execution_mode=execution_mode,
+        core_count=core_count,
+    )
+    group_dir.mkdir(parents=True, exist_ok=False)
+    return group_dir
+
+
 def create_run_id(taskset_path: str | Path) -> str:
     """Create run ID using UTC timestamp and a short deterministic-ish hash."""
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
@@ -17,7 +45,7 @@ def create_run_id(taskset_path: str | Path) -> str:
 
 
 def create_run_folder(out_root: str | Path, run_id: str) -> Path:
-    """Create `results/runs/<run_id>` (or custom root) and return the path."""
+    """Create `<out_root>/<run_id>` and return the path."""
     root = Path(out_root)
     run_dir = root / run_id
     run_dir.mkdir(parents=True, exist_ok=False)

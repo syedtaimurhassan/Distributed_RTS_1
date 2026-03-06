@@ -54,6 +54,7 @@ class TestE2ERunOnTable44(unittest.TestCase):
                 "analysis_dm_rta.csv",
                 "analysis_edf_pdc_summary.csv",
                 "analysis_edf_pdc_points.csv",
+                "analysis_edf_wcrt.csv",
                 "sim_jobs_rm.csv",
                 "sim_jobs_dm.csv",
                 "sim_jobs_edf.csv",
@@ -62,6 +63,7 @@ class TestE2ERunOnTable44(unittest.TestCase):
                 "sim_tasks_edf.csv",
                 "compare_dm_rta_vs_sim_dm.csv",
                 "compare_edf_pdc_vs_sim_edf.csv",
+                "compare_edf_wcrt_vs_sim_edf.csv",
             ]
             for filename in expected_files:
                 self.assertTrue((run_dir / filename).exists(), msg=f"missing {filename}")
@@ -92,6 +94,13 @@ class TestE2ERunOnTable44(unittest.TestCase):
                 compare_row = next(csv.DictReader(handle))
             self.assertEqual(compare_row["EDF_PDC_Feasible"], "True")
             self.assertEqual(compare_row["Agreement"], "True")
+
+            with (run_dir / "compare_edf_wcrt_vs_sim_edf.csv").open(
+                "r", newline="", encoding="utf-8"
+            ) as handle:
+                compare_wcrt_rows = list(csv.DictReader(handle))
+            self.assertEqual(len(compare_wcrt_rows), 3)
+            self.assertTrue(all(row["Difference"] == "0.0" for row in compare_wcrt_rows))
 
     def test_batch_recursive_discovery_writes_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

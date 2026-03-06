@@ -14,6 +14,8 @@ def handle_analyze(args: argparse.Namespace) -> int:
         stop_rule="H",
         out_root=args.out,
         k=1,
+        execution_mode=args.execution_mode,
+        core_count=args.cores,
     )
     return 0
 
@@ -28,5 +30,17 @@ def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser
         "--out",
         default="results/runs",
         help="Output root for run folders (default: results/runs).",
+    )
+    parser.add_argument(
+        "--execution-mode",
+        default="single",
+        choices=["single", "multi"],
+        help="Execution mode for PE handling during analysis (default: single).",
+    )
+    parser.add_argument(
+        "--cores",
+        type=int,
+        default=1,
+        help="Configured core count (default: 1).",
     )
     parser.set_defaults(handler=handle_analyze)
